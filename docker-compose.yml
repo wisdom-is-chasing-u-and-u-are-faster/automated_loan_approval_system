@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: ssms-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://ssms_user:ssms_password@postgres:5432/ssms_db # pragma: allowlist secret
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=ssms-enterprise-jwt-dev-secret-key-2026 # pragma: allowlist secret
+      - ENVIRONMENT=production
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ssms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ssms_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_dev_pw} # pragma: allowlist secret
+      POSTGRES_DB: ssms_db
+    ports:
+      - "5432:5432"
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ssms_user -d ssms_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ssms-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
