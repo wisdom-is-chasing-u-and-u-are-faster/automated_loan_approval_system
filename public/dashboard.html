@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - ALAS</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a href="index.html" class="brand">ALAS <span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html" class="active">📊 Dashboard</a></li>
+      <li><a href="applications-queue.html">📋 Applications Queue</a></li>
+      <li><a href="application-details.html?id=APP-2024-0815">🔍 Application Details</a></li>
+      <li><a href="manual-review.html">⚖️ Manual Review</a></li>
+      <li><a href="reporting.html">📈 Reporting</a></li>
+      <li><a href="user-management.html">👥 User & Role Management</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      &copy; 2024 ALAS Corp.
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="header-bar">
+      <div class="header-title">
+        <h1>Dashboard</h1>
+        <p>Real-time loan application throughput and automated decisioning metrics</p>
+      </div>
+      <button id="btn-refresh" class="btn btn-secondary">🔄 Refresh</button>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Applications Today</div>
+        <div class="metric-value" id="stat-today-apps">1,204</div>
+        <div class="metric-delta delta-positive">+5.2%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Approval Rate</div>
+        <div class="metric-value" id="stat-approval-rate">87.3%</div>
+        <div class="metric-delta delta-positive">+0.1%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Manual Review Queue</div>
+        <div class="metric-value" id="stat-manual-queue">42</div>
+        <div class="metric-delta delta-neutral">+3 since last hour</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Avg. Decision Time</div>
+        <div class="metric-value" id="stat-decision-time">&lt; 1 sec</div>
+        <div class="metric-delta delta-positive">Real-time</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Application Volume (Last 30 Days)</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Submitted</th>
+              <th>Auto-Approved</th>
+              <th>Auto-Rejected</th>
+              <th>Manual Review</th>
+            </tr>
+          </thead>
+          <tbody id="volume-table-body">
+            <tr>
+              <td>2024-07-21</td>
+              <td>1,204</td>
+              <td>980</td>
+              <td>182</td>
+              <td>42</td>
+            </tr>
+            <tr>
+              <td>2024-07-20</td>
+              <td>1,150</td>
+              <td>950</td>
+              <td>160</td>
+              <td>40</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    async function loadDashboard() {
+      try {
+        const metrics = await ALAS_API.getDashboardMetrics();
+        document.getElementById('stat-today-apps').textContent = metrics.applications_today.toLocaleString();
+        document.getElementById('stat-approval-rate').textContent = metrics.approval_rate_pct + '%';
+        document.getElementById('stat-manual-queue').textContent = metrics.manual_review_count;
+        document.getElementById('stat-decision-time').textContent = `< ${metrics.avg_decision_time_sec} sec`;
+
+        const volume = await ALAS_API.getVolumeHistory();
+        const tbody = document.getElementById('volume-table-body');
+        if (volume.history && volume.history.length > 0) {
+          tbody.innerHTML = volume.history.map(row => `
+            <tr>
+              <td><strong>${row.date}</strong></td>
+              <td>${row.submitted.toLocaleString()}</td>
+              <td><span class="badge badge-approved">${row.approved.toLocaleString()}</span></td>
+              <td><span class="badge badge-rejected">${row.rejected.toLocaleString()}</span></td>
+              <td><span class="badge badge-manual">${row.manual_review.toLocaleString()}</span></td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard:', err);
+      }
+    }
+
+    document.getElementById('btn-refresh').addEventListener('click', loadDashboard);
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>

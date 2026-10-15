@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Details - ALAS</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a href="index.html" class="brand">ALAS <span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">📊 Dashboard</a></li>
+      <li><a href="applications-queue.html">📋 Applications Queue</a></li>
+      <li><a href="application-details.html?id=APP-2024-0815" class="active">🔍 Application Details</a></li>
+      <li><a href="manual-review.html">⚖️ Manual Review</a></li>
+      <li><a href="reporting.html">📈 Reporting</a></li>
+      <li><a href="user-management.html">👥 User & Role Management</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      &copy; 2024 ALAS Corp.
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="header-bar">
+      <div class="header-title">
+        <h1 id="app-title-header">Application APP-2024-0815</h1>
+        <p>Comprehensive applicant profile, credit underwriting metrics, and decision history</p>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <a href="applications-queue.html" class="btn btn-secondary">&larr; Back to Queue</a>
+        <a id="btn-goto-review" href="manual-review.html?id=APP-2024-0815" class="btn btn-primary">Go to Review &rarr;</a>
+      </div>
+    </div>
+
+    <!-- Status Banner -->
+    <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;">
+      <div>
+        <span style="font-size: 13px; color: var(--text-muted);">Current Underwriting Status:</span>
+        <span id="app-status-badge" class="badge badge-manual" style="margin-left: 8px; font-size: 14px;">MANUAL_REVIEW</span>
+      </div>
+      <div id="decision-reason-text" style="font-size: 13px; color: var(--text-muted); max-width: 60%;">
+        Credit score (680) below threshold for auto-approval. Flagged for review.
+      </div>
+    </div>
+
+    <!-- Details Sections -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <!-- Applicant Information -->
+      <div class="card">
+        <h2 class="card-title">Applicant Information</h2>
+        <div class="details-row">
+          <span class="details-label">Name</span>
+          <span class="details-val" id="det-name">John Doe</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Date of Birth</span>
+          <span class="details-val" id="det-dob">1985-05-20</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Email</span>
+          <span class="details-val" id="det-email">j.doe@example.com</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Phone</span>
+          <span class="details-val" id="det-phone">+1 (555) 123-4567</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Address</span>
+          <span class="details-val" id="det-address">123 Main St, Anytown, USA 12345</span>
+        </div>
+      </div>
+
+      <!-- Loan Details -->
+      <div class="card">
+        <h2 class="card-title">Loan Details & Credit Profile</h2>
+        <div class="details-row">
+          <span class="details-label">Loan Type</span>
+          <span class="details-val" id="det-loan-type">Personal Loan</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Amount Requested</span>
+          <span class="details-val" id="det-amount">$10,000.00</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Loan Term</span>
+          <span class="details-val" id="det-term">36 Months</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Credit Score</span>
+          <span class="details-val" id="det-credit-score" style="color: var(--warning);">680 (Fair)</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Annual Income</span>
+          <span class="details-val" id="det-income">$75,000.00</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Debt-to-Income (DTI)</span>
+          <span class="details-val" id="det-dti">35.0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decision History Table -->
+    <div class="card">
+      <h2 class="card-title">Decision History & Audit Trail</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Stage</th>
+              <th>Outcome</th>
+              <th>Performer</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <tr>
+              <td>2024-07-21 14:30:02</td>
+              <td>Automated Check</td>
+              <td><span class="badge badge-manual">Flagged for Review</span></td>
+              <td>Rules Engine</td>
+              <td>Credit score below threshold (700) for instant approval.</td>
+            </tr>
+            <tr>
+              <td>2024-07-21 14:30:01</td>
+              <td>Initial Submission</td>
+              <td><span class="badge badge-pending">Received</span></td>
+              <td>System Ingestion</td>
+              <td>Application received via Enterprise UI portal.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    async function loadApplicationDetails() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const appId = urlParams.get('id') || 'APP-2024-0815';
+
+      document.getElementById('app-title-header').textContent = `Application ${appId}`;
+      document.getElementById('btn-goto-review').href = `manual-review.html?id=${appId}`;
+
+      try {
+        const app = await ALAS_API.getApplicationDetails(appId);
+        
+        // Status & Banner
+        const badge = document.getElementById('app-status-badge');
+        badge.textContent = app.status;
+        badge.className = `badge ${ALAS_API.getStatusBadgeClass(app.status)}`;
+        document.getElementById('decision-reason-text').textContent = app.decision_reason || 'Automated underwriting completed.';
+
+        // Applicant Info
+        document.getElementById('det-name').textContent = app.applicant.name;
+        document.getElementById('det-dob').textContent = app.applicant.dob;
+        document.getElementById('det-email').textContent = app.applicant.email;
+        document.getElementById('det-phone').textContent = app.applicant.phone;
+        document.getElementById('det-address').textContent = app.applicant.address;
+
+        // Loan Details
+        document.getElementById('det-loan-type').textContent = app.loan_details.loan_type;
+        document.getElementById('det-amount').textContent = ALAS_API.formatCurrency(app.loan_details.amount_requested);
+        document.getElementById('det-term').textContent = `${app.loan_details.loan_term_months} Months`;
+        document.getElementById('det-credit-score').textContent = app.loan_details.credit_score;
+        document.getElementById('det-income').textContent = ALAS_API.formatCurrency(app.loan_details.annual_income);
+        document.getElementById('det-dti').textContent = `${app.loan_details.debt_to_income_ratio}%`;
+
+        // Decision History
+        const tbody = document.getElementById('history-table-body');
+        if (app.decision_history && app.decision_history.length > 0) {
+          tbody.innerHTML = app.decision_history.map(h => `
+            <tr>
+              <td>${h.timestamp}</td>
+              <td><strong>${h.stage}</strong></td>
+              <td><span class="badge ${ALAS_API.getStatusBadgeClass(h.outcome)}">${h.outcome}</span></td>
+              <td>${h.performer}</td>
+              <td>${h.notes}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load application details:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadApplicationDetails);
+  </script>
+</body>
+</html>

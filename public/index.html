@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALAS - Enterprise Automatic Loan Approval System</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a href="index.html" class="brand">ALAS <span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">📊 Dashboard</a></li>
+      <li><a href="applications-queue.html">📋 Applications Queue</a></li>
+      <li><a href="application-details.html?id=APP-2024-0815">🔍 Application Details</a></li>
+      <li><a href="manual-review.html">⚖️ Manual Review</a></li>
+      <li><a href="reporting.html">📈 Reporting</a></li>
+      <li><a href="user-management.html">👥 User & Role Management</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      &copy; 2024 ALAS Enterprise Platform
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="header-bar">
+      <div class="header-title">
+        <h1>Automatic Loan Approval System (ALAS)</h1>
+        <p>Cloud-Native Event-Driven Consumer Lending & Automated Underwriting Platform</p>
+      </div>
+      <a href="dashboard.html" class="btn btn-primary">Open Dashboard &rarr;</a>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Applications Today</div>
+        <div class="metric-value" id="kpi-apps">1,204</div>
+        <div class="metric-delta delta-positive">+5.2% vs yesterday</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Straight-Through Approval</div>
+        <div class="metric-value" id="kpi-rate">87.3%</div>
+        <div class="metric-delta delta-positive">+0.1% target met</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Manual Review Queue</div>
+        <div class="metric-value" id="kpi-manual">42</div>
+        <div class="metric-delta delta-neutral">+3 pending review</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Avg. Decision Latency</div>
+        <div class="metric-value" id="kpi-lat">&lt; 1 sec</div>
+        <div class="metric-delta delta-positive">Sub-second P95</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Enterprise System Modules</h2>
+      <div class="details-grid">
+        <div class="card" style="margin-bottom:0">
+          <h3>📊 Real-time Dashboard</h3>
+          <p style="color:var(--text-muted); margin: 8px 0 16px;">Monitor high-throughput loan processing volume, straight-through approval rates, and decision latencies.</p>
+          <a href="dashboard.html" class="btn btn-secondary">Launch Dashboard</a>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <h3>📋 Applications Queue</h3>
+          <p style="color:var(--text-muted); margin: 8px 0 16px;">Search, filter, and inspect consumer lending applications across all underwriting states.</p>
+          <a href="applications-queue.html" class="btn btn-secondary">View Queue</a>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <h3>⚖️ Manual Review Workbench</h3>
+          <p style="color:var(--text-muted); margin: 8px 0 16px;">Adjudicate flagged applications with risk indicators and record immutable audit histories.</p>
+          <a href="manual-review.html" class="btn btn-secondary">Open Workbench</a>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <h3>👥 User & RBAC Management</h3>
+          <p style="color:var(--text-muted); margin: 8px 0 16px;">Administer enterprise users and enforce OAuth2/OIDC role-based permissions.</p>
+          <a href="user-management.html" class="btn btn-secondary">Manage Users</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const metrics = await ALAS_API.getDashboardMetrics();
+        document.getElementById('kpi-apps').textContent = metrics.applications_today.toLocaleString();
+        document.getElementById('kpi-rate').textContent = metrics.approval_rate_pct + '%';
+        document.getElementById('kpi-manual').textContent = metrics.manual_review_count;
+      } catch (e) {
+        console.log('Using baseline KPI defaults');
+      }
+    });
+  </script>
+</body>
+</html>
