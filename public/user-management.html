@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management - ALAS</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a href="index.html" class="brand">ALAS <span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">📊 Dashboard</a></li>
+      <li><a href="applications-queue.html">📋 Applications Queue</a></li>
+      <li><a href="application-details.html?id=APP-2024-0815">🔍 Application Details</a></li>
+      <li><a href="manual-review.html">⚖️ Manual Review</a></li>
+      <li><a href="reporting.html">📈 Reporting</a></li>
+      <li><a href="user-management.html" class="active">👥 User & Role Management</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      &copy; 2024 ALAS Corp.
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="header-bar">
+      <div class="header-title">
+        <h1>User & Role Management</h1>
+        <p>Enterprise identity, Role-Based Access Control (RBAC), and security policy administration</p>
+      </div>
+      <button id="btn-add-user" class="btn btn-primary" onclick="toggleAddUserModal()">+ Add New User</button>
+    </div>
+
+    <!-- System Users Table -->
+    <div class="card">
+      <h2 class="card-title">System Users & RBAC Assignments</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Full Name</th>
+              <th>Email Address</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add User Modal Form -->
+    <div id="add-user-modal" class="card" style="display: none; border: 2px solid var(--primary); margin-top: 24px;">
+      <h2 class="card-title">Add System User</h2>
+      <form id="add-user-form">
+        <div class="details-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="usr-name" class="form-input" required placeholder="e.g. John Underwriter">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="usr-email" class="form-input" required placeholder="e.g. j.underwriter@alas.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Password</label>
+            <input type="password" id="usr-pwd" class="form-input" required value="Password123!">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Assigned Role</label>
+            <select id="usr-role" class="form-select">
+              <option value="Reviewer">Reviewer (Loan Underwriter)</option>
+              <option value="Administrator">Administrator</option>
+              <option value="Auditor">Auditor (Compliance)</option>
+              <option value="Developer">Developer (API Client)</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" onclick="toggleAddUserModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create User</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    function toggleAddUserModal() {
+      const modal = document.getElementById('add-user-modal');
+      modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function loadUsers() {
+      const tbody = document.getElementById('users-table-body');
+      try {
+        const data = await ALAS_API.getUsers();
+        if (!data.users || data.users.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:24px;">No users found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.users.map(u => `
+          <tr>
+            <td><strong>${u.user_id}</strong></td>
+            <td>${u.full_name}</td>
+            <td>${u.email}</td>
+            <td><span class="badge ${u.role === 'Administrator' ? 'badge-rejected' : 'badge-pending'}">${u.role}</span></td>
+            <td><span class="badge badge-active">${u.status}</span></td>
+            <td>
+              <button class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="promptEditRole('${u.user_id}', '${u.full_name}', '${u.role}')">Edit Role</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load users:', err);
+      }
+    }
+
+    async function promptEditRole(userId, name, currentRole) {
+      const newRole = prompt(`Update role for ${name} (${userId}):\nAllowed: Administrator, Reviewer, Auditor, Developer`, currentRole);
+      if (newRole && newRole !== currentRole) {
+        try {
+          await ALAS_API.updateUser(userId, { role: newRole });
+          alert(`Role updated to ${newRole}`);
+          loadUsers();
+        } catch (e) {
+          alert('Failed to update role: ' + e.message);
+        }
+      }
+    }
+
+    document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        full_name: document.getElementById('usr-name').value,
+        email: document.getElementById('usr-email').value,
+        password: document.getElementById('usr-pwd').value,
+        role: document.getElementById('usr-role').value
+      };
+
+      try {
+        const created = await ALAS_API.createUser(payload);
+        alert(`User ${created.full_name} (${created.user_id}) created successfully.`);
+        toggleAddUserModal();
+        loadUsers();
+      } catch (err) {
+        alert('Failed to create user: ' + err.message);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadUsers);
+  </script>
+</body>
+</html>

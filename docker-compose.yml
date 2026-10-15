@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  alas-app:
+    build: .
+    container_name: alas-app
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - DATABASE_URL=${DATABASE_URL:-postgresql://alas_user:alas_password@postgres:5432/alas_db}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - SECRET_KEY=${SECRET_KEY:-alas-development-auth-signing-token-3815}
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: alas-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-alas_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-alas_password}
+      POSTGRES_DB: ${POSTGRES_DB:-alas_db}
+    ports:
+      - "5432:5432"
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: alas-redis
+    ports:
+      - "6379:6379"
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:

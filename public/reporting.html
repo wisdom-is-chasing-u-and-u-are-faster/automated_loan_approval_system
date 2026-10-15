@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporting - ALAS</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a href="index.html" class="brand">ALAS <span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">📊 Dashboard</a></li>
+      <li><a href="applications-queue.html">📋 Applications Queue</a></li>
+      <li><a href="application-details.html?id=APP-2024-0815">🔍 Application Details</a></li>
+      <li><a href="manual-review.html">⚖️ Manual Review</a></li>
+      <li><a href="reporting.html" class="active">📈 Reporting</a></li>
+      <li><a href="user-management.html">👥 User & Role Management</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      &copy; 2024 ALAS Corp.
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="header-bar">
+      <div class="header-title">
+        <h1>Reporting & Analytics</h1>
+        <p>Regulatory compliance analytics, straight-through throughput, and adjudication audit logs</p>
+      </div>
+    </div>
+
+    <!-- Report Parameters Filter Card -->
+    <div class="card">
+      <h2 class="card-title">Generate Report</h2>
+      <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 16px; align-items: flex-end;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Report Type</label>
+          <select id="report-type-select" class="form-select">
+            <option value="daily_summary">Daily Approval Summary (STP Throughput)</option>
+            <option value="loan_type_performance">Loan Type Performance & Risk Distribution</option>
+            <option value="user_audit">User Adjudication Audit Log (FCRA / ECOA)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Start Date</label>
+          <input type="date" id="report-start-date" class="form-input" value="2024-07-01">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">End Date</label>
+          <input type="date" id="report-end-date" class="form-input" value="2024-07-21">
+        </div>
+        <button id="btn-generate-report" class="btn btn-primary" style="height: 42px;">📊 Generate</button>
+      </div>
+    </div>
+
+    <!-- Report Results Table -->
+    <div class="card">
+      <h2 class="card-title" id="report-title-display">Daily Approval Summary: 2024-07-01 to 2024-07-21</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Submitted</th>
+              <th>Auto-Approved</th>
+              <th>Auto-Rejected</th>
+              <th>Manual Review</th>
+              <th>Final Approved</th>
+              <th>Final Rejected</th>
+            </tr>
+          </thead>
+          <tbody id="report-table-body">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    async function generateReport() {
+      const type = document.getElementById('report-type-select').value;
+      const start = document.getElementById('report-start-date').value;
+      const end = document.getElementById('report-end-date').value;
+      const tbody = document.getElementById('report-table-body');
+
+      document.getElementById('report-title-display').textContent = `Daily Approval Summary: ${start} to ${end}`;
+
+      try {
+        const data = await ALAS_API.getReports(type, start, end);
+        if (!data.summary || data.summary.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:24px;">No records found for specified date range.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.summary.map(row => `
+          <tr>
+            <td><strong>${row.date}</strong></td>
+            <td>${row.submitted.toLocaleString()}</td>
+            <td><span class="badge badge-approved">${row.auto_approved.toLocaleString()}</span></td>
+            <td><span class="badge badge-rejected">${row.auto_rejected.toLocaleString()}</span></td>
+            <td><span class="badge badge-manual">${row.manual_review.toLocaleString()}</span></td>
+            <td><strong>${row.final_approved.toLocaleString()}</strong></td>
+            <td><strong>${row.final_rejected.toLocaleString()}</strong></td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to generate report:', err);
+      }
+    }
+
+    document.getElementById('btn-generate-report').addEventListener('click', generateReport);
+    document.addEventListener('DOMContentLoaded', generateReport);
+  </script>
+</body>
+</html>

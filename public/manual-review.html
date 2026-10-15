@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual Review - ALAS</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a href="index.html" class="brand">ALAS <span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">📊 Dashboard</a></li>
+      <li><a href="applications-queue.html">📋 Applications Queue</a></li>
+      <li><a href="application-details.html?id=APP-2024-0815">🔍 Application Details</a></li>
+      <li><a href="manual-review.html" class="active">⚖️ Manual Review</a></li>
+      <li><a href="reporting.html">📈 Reporting</a></li>
+      <li><a href="user-management.html">👥 User & Role Management</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      &copy; 2024 ALAS Corp.
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="header-bar">
+      <div class="header-title">
+        <h1>Manual Review Workbench</h1>
+        <p>Underwriting adjudication workbench for flagged consumer lending files</p>
+      </div>
+      <button id="btn-next-queue" class="btn btn-secondary">Next in Queue &rarr;</button>
+    </div>
+
+    <!-- Review Banner -->
+    <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: #fffbeb; border-color: #fde68a;">
+      <div>
+        <strong>Reviewing File:</strong> <span id="rev-app-id" style="font-weight: 700; color: var(--primary);">APP-2024-0815</span>
+        <span id="rev-applicant-name" style="margin-left: 8px; color: var(--secondary); font-weight: 600;">(John Doe)</span>
+      </div>
+      <div>
+        <span class="badge badge-manual">Action Required</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px;">
+      <!-- Application Summary -->
+      <div class="card">
+        <h2 class="card-title">Applicant & Risk Summary</h2>
+        <div class="details-row">
+          <span class="details-label">Applicant Name</span>
+          <span class="details-val" id="summary-name">John Doe</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Amount Requested</span>
+          <span class="details-val" id="summary-amount">$10,000.00</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Credit Score</span>
+          <span class="details-val" id="summary-score" style="color: var(--warning);">680 (Low auto-approval band)</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Debt-to-Income (DTI)</span>
+          <span class="details-val" id="summary-dti">35.0% (Acceptable)</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Annual Income</span>
+          <span class="details-val" id="summary-income">$75,000.00</span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Flag Reason</span>
+          <span class="details-val" id="summary-flag-reason" style="color: var(--danger); font-size: 13px;">Credit score below 700 threshold for instant approval.</span>
+        </div>
+      </div>
+
+      <!-- Adjudication Action Form -->
+      <div class="card">
+        <h2 class="card-title">Adjudication Decision</h2>
+        <form id="adjudication-form">
+          <div class="form-group">
+            <label class="form-label">Underwriter Review Notes</label>
+            <textarea id="review-notes" class="form-textarea" placeholder="Enter adjudication justification and underwriting rationale..." required>Verified applicant employment and stable income history. Risk acceptable under secondary underwriting guidelines.</textarea>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+            <button type="button" class="btn btn-success" style="justify-content: center;" onclick="submitAdjudication('APPROVE')">
+              ✅ Approve Loan
+            </button>
+            <button type="button" class="btn btn-danger" style="justify-content: center;" onclick="submitAdjudication('DENY')">
+              ❌ Deny Loan
+            </button>
+            <button type="button" class="btn btn-secondary" style="justify-content: center;" onclick="submitAdjudication('REQUEST_INFO')">
+              ℹ️ Request More Information
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    let currentAppId = 'APP-2024-0815';
+
+    async function loadManualReview() {
+      const urlParams = new URLSearchParams(window.location.search);
+      currentAppId = urlParams.get('id') || 'APP-2024-0815';
+
+      document.getElementById('rev-app-id').textContent = currentAppId;
+
+      try {
+        const app = await ALAS_API.getApplicationDetails(currentAppId);
+        document.getElementById('rev-applicant-name').textContent = `(${app.applicant.name})`;
+        document.getElementById('summary-name').textContent = app.applicant.name;
+        document.getElementById('summary-amount').textContent = ALAS_API.formatCurrency(app.loan_details.amount_requested);
+        document.getElementById('summary-score').textContent = `${app.loan_details.credit_score} (Band evaluation)`;
+        document.getElementById('summary-dti').textContent = `${app.loan_details.debt_to_income_ratio}%`;
+        document.getElementById('summary-income').textContent = ALAS_API.formatCurrency(app.loan_details.annual_income);
+        document.getElementById('summary-flag-reason').textContent = app.decision_reason || 'Flagged for underwriter verification.';
+      } catch (err) {
+        console.error('Failed to load review file:', err);
+      }
+    }
+
+    async function submitAdjudication(action) {
+      const notes = document.getElementById('review-notes').value;
+      if (!notes.trim()) {
+        alert('Please enter review notes before submitting adjudication.');
+        return;
+      }
+
+      try {
+        const res = await ALAS_API.adjudicateApplication(currentAppId, action, notes);
+        alert(`Adjudication Complete!\nStatus: ${res.status}\nAdjudicated By: ${res.adjudicated_by}\n${res.message}`);
+        window.location.href = `application-details.html?id=${currentAppId}`;
+      } catch (err) {
+        alert('Adjudication failed: ' + err.message);
+      }
+    }
+
+    document.getElementById('btn-next-queue').addEventListener('click', async () => {
+      try {
+        const queue = await ALAS_API.getManualReviewQueue();
+        if (queue.applications && queue.applications.length > 0) {
+          const nextApp = queue.applications.find(a => a.id !== currentAppId) || queue.applications[0];
+          window.location.href = `manual-review.html?id=${nextApp.id}`;
+        } else {
+          alert('No more pending applications in manual review queue!');
+        }
+      } catch (err) {
+        alert('Error fetching next application in queue.');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadManualReview);
+  </script>
+</body>
+</html>
